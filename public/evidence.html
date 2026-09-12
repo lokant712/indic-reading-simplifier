@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Disclosure & Verification Gallery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .gallery-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .gallery-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .gallery-header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .gallery-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .gallery-card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .gallery-card-desc {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+    .gallery-img-wrapper {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #000;
+    }
+    .gallery-img-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+    .gallery-img-wrapper img:hover {
+      transform: scale(1.01);
+    }
+    .badge-pill {
+      font-size: 0.75rem;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">📸</div>
+        <div class="logo-text">
+          <h1>Verification & Disclosure Evidence Gallery</h1>
+          <div class="logo-tagline">Adaptive Indic Simplifier (v2) Visual Proof</div>
+        </div>
+      </div>
+      <div>
+        <a href="/" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">← Back to App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="gallery-container">
+    <div class="gallery-header">
+      <h1>Technical Verification Screenshots</h1>
+      <p style="color: #94a3b8;">Full-resolution evidence captures of auto-detection, baseline calibration, word taps, targeted replacements, and telemetry logs.</p>
+    </div>
+
+    <!-- Item 1: Tamil Auto-Detection -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>1. Tamil Auto-Detection (No Manual Selector)</span>
+        <span class="badge-pill">Unicode Script Analysis</span>
+      </div>
+      <div class="gallery-card-desc">
+        Pasting Tamil text immediately activates the <code>Tamil (Tamil)</code> badge with live paragraph and word count, with zero manual language dropdown required.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/01_tamil_auto_detect_input_1788717588135.png" alt="Tamil Auto-Detection">
+      </div>
+    </div>
+
+    <!-- Item 2: Tamil Paragraph 1 Unmodified Baseline -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>2. Tamil Paragraph 1 (100% Unmodified Baseline)</span>
+        <span class="badge-pill">Baseline Pace Calibration</span>
+      </div>
+      <div class="gallery-card-desc">
+        Paragraph 1 loads in authentic, unmodified form with <code>Baseline (Unmodified)</code> and <code>Baseline Calibration (1/5)</code> badges to measure natural reading speed.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/02_tamil_para1_unmodified_1788717623406.png" alt="Tamil Paragraph 1 Baseline">
+      </div>
+    </div>
+
+    <!-- Item 3: Word Tapped & Dynamic Button -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>3. Word Tapped & Dynamic Button Transformation</span>
+        <span class="badge-pill">Word-Level Telemetry</span>
+      </div>
+      <div class="gallery-card-desc">
+        Clicking the word <code>தொன்மையான</code> flags it with a golden highlight ring (<code>👆 1 tap</code>), dynamically transforming the button into <code>⚠️ Replace 1 flagged word & simplify</code>.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/03_word_tapped_targeted_button_1788717657138.png" alt="Word Tapped State">
+      </div>
+    </div>
+
+    <!-- Item 4: In-Place Targeted Replacement -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>4. In-Place Targeted Word Replacement</span>
+        <span class="badge-pill">Targeted Vocabulary Swap</span>
+      </div>
+      <div class="gallery-card-desc">
+        Clicking the button replaces the literary term <code>தொன்மையான</code> with the simpler everyday word <code>பழைய</code> in-place with an <code>Escalated Level (2/5)</code> badge.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/04_targeted_replacement_result_1788717698370.png" alt="Targeted Replacement Result">
+      </div>
+    </div>
+
+    <!-- Item 5: Next Paragraph Adaptive Simplification -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>5. Next Paragraph Adaptive Simplification (Groq)</span>
+        <span class="badge-pill">Groq openai/gpt-oss-120b</span>
+      </div>
+      <div class="gallery-card-desc">
+        Paragraph 2 is simplified adaptively based on Paragraph 1 signals, displaying the <code>Simplified via Groq (openai/gpt-oss-120b)</code> provenance badge and <code>Level 2: Moderate</code> aggressiveness.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/05_para2_adaptive_groq_1788717782864.png" alt="Paragraph 2 Simplification">
+      </div>
+    </div>
+
+    <!-- Item 6: Summary & Readability Details Panel -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>6. Summary Screen & Readability Details Panel</span>
+        <span class="badge-pill">Readability & Retention Deltas</span>
+      </div>
+      <div class="gallery-card-desc">
+        Shows all 7 populated struggle signals, distinct escalation breakdown (<code>1 targeted | 0 full-para</code>), and the expanded Readability Details panel with before/after sentence length reduction (30.5 ➔ 15.0), word length, and 100% number/noun retention.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/06_summary_readability_panel_1788717973878.png" alt="Summary and Readability Panel">
+      </div>
+    </div>
+
+    <!-- Item 7: Hindi Auto-Detection -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>7. Hindi Auto-Detection (Devanagari Script)</span>
+        <span class="badge-pill">Hindi Session</span>
+      </div>
+      <div class="gallery-card-desc">
+        Hindi text dynamically detects <code>Hindi (Devanagari)</code> with 2 paragraphs and word count preview.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/07_hindi_auto_detect_input_1788718371683.png" alt="Hindi Auto-Detection">
+      </div>
+    </div>
+
+    <!-- Item 8: Hindi Paragraph 1 Unmodified Baseline -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>8. Hindi Paragraph 1 (100% Unmodified Baseline)</span>
+        <span class="badge-pill">Hindi Baseline</span>
+      </div>
+      <div class="gallery-card-desc">
+        Hindi Paragraph 1 loaded 100% unmodified with <code>Baseline (Unmodified)</code> badge.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/08_hindi_para1_unmodified_1788718411994.png" alt="Hindi Paragraph 1 Baseline">
+      </div>
+    </div>
+
+    <!-- Item 9: Session Summary & JSON Export -->
+    <div class="gallery-card">
+      <div class="gallery-card-title">
+        <span>9. Final Session Summary & JSON Export</span>
+        <span class="badge-pill">JSON Telemetry Export</span>
+      </div>
+      <div class="gallery-card-desc">
+        Complete session overview with one-click <code>📥 Export session log (JSON)</code> download.
+      </div>
+      <div class="gallery-img-wrapper">
+        <img src="/screenshots/09_hindi_summary_export_1788718561941.png" alt="Hindi Summary and Export">
+      </div>
+    </div>
+  </main>
+</body>
+</html>

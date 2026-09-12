@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Multi-Paragraph Reading Simplifier</title>
+  <meta name="description" content="Adaptive multi-paragraph reading simplifier for Indic languages with automatic provider failover and real-time reading struggle detection.">
+
+  <!-- Google Fonts: Inter, Outfit, Noto Sans Tamil, Noto Sans Devanagari, Mukta -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Mukta:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Global App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">✨</div>
+        <div class="logo-text">
+          <h1>Adaptive Indic Simplifier</h1>
+          <div class="logo-tagline">Dynamic Multilingual Readability Engine</div>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="badge badge-muted" id="global-status-badge">⚡ Failover: Groq → Gemini → Fallback</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="app-main">
+    
+    <!-- =======================================================
+         VIEW 1: Text Input & Configuration
+         ======================================================= -->
+    <section id="view-input" class="glass-panel">
+      <div class="input-header">
+        <h2>Paste your text to begin</h2>
+        <p>Paste any multi-paragraph text in Tamil, Hindi, English, or any Indic script. The app automatically detects the language and calibrates to your reading speed.</p>
+      </div>
+
+      <!-- AI & Privacy Notice Banner -->
+      <div class="privacy-notice-banner">
+        <span class="privacy-icon">🔒</span>
+        <span class="privacy-text"><strong>Notice:</strong> Text you paste is sent to AI services to be simplified. Don't paste sensitive personal information.</span>
+      </div>
+
+      <div class="input-box-wrapper">
+        <textarea
+          id="input-text"
+          class="input-textarea"
+          placeholder="Paste your text here (one or more paragraphs)...&#10;&#10;உதாரணம் (Tamil): தமிழ் இலக்கியங்கள் பழமையும் வளமும் கொண்டவை...&#10;उदाहरण (Hindi): भारत एक समृद्ध और विविधतापूर्ण देश है..."
+          rows="9"
+        ></textarea>
+      </div>
+
+      <div class="input-meta-bar">
+        <div class="input-live-indicators">
+          <span id="input-lang-badge" class="badge badge-muted">Auto-Detect</span>
+          <span id="input-stats" class="badge badge-muted">0 paragraphs | 0 words</span>
+        </div>
+        <label class="file-upload-btn">
+          📂 Upload a .txt file
+          <input type="file" id="file-input" accept=".txt,text/plain">
+        </label>
+      </div>
+
+      <div class="input-actions">
+        <button id="btn-start" class="btn btn-primary" disabled>
+          Start Reading →
+        </button>
+      </div>
+    </section>
+
+    <!-- =======================================================
+         VIEW 2: Progressive Reading Screen
+         ======================================================= -->
+    <section id="view-reading" class="glass-panel hidden">
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <div id="loading-message" style="font-weight: 600; color: #f8fafc;">Simplifying text...</div>
+      </div>
+
+      <!-- Reading Header / Metadata -->
+      <div class="reading-meta-header">
+        <div class="reading-progress-title" id="progress-indicator">Paragraph 1 of 1</div>
+        <div class="reading-meta-tags">
+          <span class="badge badge-primary" id="reading-lang-badge">Tamil</span>
+          <span class="badge badge-baseline" id="provider-badge">Original Text (Baseline)</span>
+          <span class="badge badge-muted" id="aggressiveness-badge">Aggressiveness: Level 1</span>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Bar -->
+      <div class="reading-telemetry-bar">
+        <div class="telemetry-group">
+          <span class="telemetry-item" id="live-timer-badge">⏱️ 0.0s</span>
+          <span class="telemetry-item" id="live-taps-badge">👆 0 taps</span>
+          <span class="telemetry-item" id="live-regr-badge" style="display: none;">◀ 0 regressions</span>
+        </div>
+        <div class="telemetry-sub" style="font-size: 0.78rem; opacity: 0.85;">
+          💡 Tip: Tap unfamiliar words, scroll back to re-read, or select text
+        </div>
+      </div>
+
+      <!-- Main Reading Viewport -->
+      <div class="reading-viewport" id="reading-viewport">
+        <div id="reading-container" class="reading-text-content">
+          <!-- Dynamically populated word tokens -->
+        </div>
+      </div>
+
+      <!-- Controls Bar -->
+      <div class="reading-controls-bar">
+        <div class="reading-controls-left">
+          <button id="btn-prev" class="btn btn-secondary hidden" title="Re-read the previous paragraph (Logs explicit regression)">
+            ◀ Re-read previous paragraph
+          </button>
+          <button id="btn-simplify-current" class="btn btn-warning" title="Re-simplify current paragraph with higher aggressiveness">
+            ⚠️ I don't understand — simplify this
+          </button>
+        </div>
+        <div class="reading-controls-right">
+          <button id="btn-next" class="btn btn-primary">
+            Next Paragraph →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================
+         VIEW 3: Session Summary Screen
+         ======================================================= -->
+    <section id="view-summary" class="glass-panel hidden">
+      <div class="summary-hero">
+        <div class="summary-hero-icon">🎉</div>
+        <h2>You've finished this text!</h2>
+        <p>Here is your complete adaptive reading session summary, behavioral struggle telemetry, and automated readability metrics.</p>
+      </div>
+
+      <!-- Summary Metrics Grid -->
+      <div class="summary-metrics-grid" id="summary-metrics">
+        <!-- Dynamically rendered metric cards -->
+      </div>
+
+      <!-- Paragraph Breakdown & Readability Evidence -->
+      <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: #fff;">Paragraph Log, Readability Deltas & Content Retention</h3>
+      <div class="summary-paras-list" id="summary-paragraphs">
+        <!-- Dynamically rendered paragraph cards with collapsible readability metrics -->
+      </div>
+
+      <!-- Summary Actions -->
+      <div class="summary-actions-bar">
+        <button id="btn-export-json" class="btn btn-outline">
+          📥 Export session log (JSON)
+        </button>
+        <button id="btn-restart" class="btn btn-primary">
+          🔄 Read Another Text
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Application Script Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
