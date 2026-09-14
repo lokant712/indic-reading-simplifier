@@ -19,6 +19,8 @@ export function computeReadabilityDelta({ originalText = '', simplifiedText = ''
     ? Math.round((simpStats.wordCount / origStats.wordCount) * 100) / 100
     : 1.0;
 
+  const isTamil = origStats.tamilStructuralDifficulty !== null && simpStats.tamilStructuralDifficulty !== null;
+
   return {
     avgSentenceLength: {
       before: origStats.avgSentenceLength,
@@ -45,6 +47,16 @@ export function computeReadabilityDelta({ originalText = '', simplifiedText = ''
       after: simpStats.conjunctDensity,
       delta: Math.round((simpStats.conjunctDensity - origStats.conjunctDensity) * 10) / 10
     },
+    avgMorphemeBoundariesPerWord: isTamil ? {
+      before: origStats.avgMorphemeBoundariesPerWord,
+      after: simpStats.avgMorphemeBoundariesPerWord,
+      delta: Math.round((simpStats.avgMorphemeBoundariesPerWord - origStats.avgMorphemeBoundariesPerWord) * 10) / 10
+    } : null,
+    tamilStructuralDifficulty: isTamil ? {
+      before: origStats.tamilStructuralDifficulty,
+      after: simpStats.tamilStructuralDifficulty,
+      delta: Math.round((simpStats.tamilStructuralDifficulty - origStats.tamilStructuralDifficulty) * 100) / 100
+    } : null,
     numberRetentionPct: numberPreservation.retentionPct,
     numbersFound: {
       original: numberPreservation.originalNumbers,
@@ -68,9 +80,196 @@ export function computeReadabilityDelta({ originalText = '', simplifiedText = ''
 }
 
 /**
+ * Standard Tamil grammatical suffix registry.
+ * Covers canonical case markers, nominal inflections, clitics, and verb tense/PNG endings.
+ */
+export const TAMIL_SUFFIX_RULES = [
+  // Verb Tense + Person-Number-Gender (PNG) & Aspect
+  { suffix: 'கின்றார்கள்', type: 'verb_present_3pl' },
+  { suffix: 'கின்றீர்கள்', type: 'verb_present_2pl' },
+  { suffix: 'கிறார்கள்', type: 'verb_present_3pl' },
+  { suffix: 'கிறீர்கள்', type: 'verb_present_2pl' },
+  { suffix: 'த்தார்கள்', type: 'verb_past_3pl' },
+  { suffix: 'ந்தார்கள்', type: 'verb_past_3pl' },
+  { suffix: 'ட்டார்கள்', type: 'verb_past_3pl' },
+  { suffix: 'ப்பார்கள்', type: 'verb_future_3pl' },
+  { suffix: 'வார்கள்', type: 'verb_future_3pl' },
+  { suffix: 'த்தீர்கள்', type: 'verb_past_2pl' },
+  { suffix: 'ந்தீர்கள்', type: 'verb_past_2pl' },
+  { suffix: 'ப்பீர்கள்', type: 'verb_future_2pl' },
+  { suffix: 'வீர்கள்', type: 'verb_future_2pl' },
+  { suffix: 'கின்றோம்', type: 'verb_present_1pl' },
+  { suffix: 'கின்றேன்', type: 'verb_present_1sg' },
+  { suffix: 'கின்றான்', type: 'verb_present_3ms' },
+  { suffix: 'கின்றாள்', type: 'verb_present_3fs' },
+  { suffix: 'கின்றது', type: 'verb_present_3ns' },
+  { suffix: 'கின்றன', type: 'verb_present_3np' },
+  { suffix: 'கின்றாய்', type: 'verb_present_2sg' },
+  { suffix: 'இன்றேன்', type: 'verb_present_1sg' },
+  { suffix: 'கிறோம்', type: 'verb_present_1pl' },
+  { suffix: 'கிறேன்', type: 'verb_present_1sg' },
+  { suffix: 'கிறான்', type: 'verb_present_3ms' },
+  { suffix: 'கிறாள்', type: 'verb_present_3fs' },
+  { suffix: 'கிறது', type: 'verb_present_3ns' },
+  { suffix: 'கிறாய்', type: 'verb_present_2sg' },
+  { suffix: 'த்தோம்', type: 'verb_past_1pl' },
+  { suffix: 'ந்தோம்', type: 'verb_past_1pl' },
+  { suffix: 'ட்டோம்', type: 'verb_past_1pl' },
+  { suffix: 'த்தேன்', type: 'verb_past_1sg' },
+  { suffix: 'ந்தேன்', type: 'verb_past_1sg' },
+  { suffix: 'ட்டேன்', type: 'verb_past_1sg' },
+  { suffix: 'த்தான்', type: 'verb_past_3ms' },
+  { suffix: 'ந்தான்', type: 'verb_past_3ms' },
+  { suffix: 'ட்டான்', type: 'verb_past_3ms' },
+  { suffix: 'டான்', type: 'verb_past_3ms' },
+  { suffix: 'த்தாள்', type: 'verb_past_3fs' },
+  { suffix: 'ந்தாள்', type: 'verb_past_3fs' },
+  { suffix: 'ட்டாள்', type: 'verb_past_3fs' },
+  { suffix: 'டாள்', type: 'verb_past_3fs' },
+  { suffix: 'த்தது', type: 'verb_past_3ns' },
+  { suffix: 'ந்தது', type: 'verb_past_3ns' },
+  { suffix: 'ட்டது', type: 'verb_past_3ns' },
+  { suffix: 'த்தாய்', type: 'verb_past_2sg' },
+  { suffix: 'ந்தாய்', type: 'verb_past_2sg' },
+  { suffix: 'த்தன', type: 'verb_past_3np' },
+  { suffix: 'ந்தன', type: 'verb_past_3np' },
+  { suffix: 'ப்போம்', type: 'verb_future_1pl' },
+  { suffix: 'வோம்', type: 'verb_future_1pl' },
+  { suffix: 'ப்பேன்', type: 'verb_future_1sg' },
+  { suffix: 'வேன்', type: 'verb_future_1sg' },
+  { suffix: 'ப்பான்', type: 'verb_future_3ms' },
+  { suffix: 'வான்', type: 'verb_future_3ms' },
+  { suffix: 'ப்பாள்', type: 'verb_future_3fs' },
+  { suffix: 'வாள்', type: 'verb_future_3fs' },
+  { suffix: 'ப்பாய்', type: 'verb_future_2sg' },
+  { suffix: 'வாய்', type: 'verb_future_2sg' },
+  { suffix: 'பவர்கள்', type: 'participle_noun' },
+  { suffix: 'வர்கள்', type: 'participle_noun' },
+  { suffix: 'விட்டு', type: 'verb_completive' },
+  { suffix: 'ிட்டு', type: 'verb_completive' },
+  { suffix: 'ட்டு', type: 'verb_participle' },
+
+  // Case Markers & Postpositions
+  { suffix: 'ிலிருந்து', type: 'case_ablative' },
+  { suffix: 'ிலிருந்த', type: 'case_ablative_base' },
+  { suffix: 'இருந்து', type: 'case_ablative' },
+  { suffix: 'உடைய', type: 'case_genitive' },
+  { suffix: 'முடைய', type: 'case_genitive' },
+  { suffix: 'னுடைய', type: 'case_genitive' },
+  { suffix: 'ுடைய', type: 'case_genitive' },
+  { suffix: 'உடன்', type: 'case_sociative' },
+  { suffix: 'ுடன்', type: 'case_sociative' },
+  { suffix: 'இடம்', type: 'case_locative' },
+  { suffix: 'ிடம்', type: 'case_locative' },
+  { suffix: 'ற்கு', type: 'case_dative' },
+  { suffix: 'க்கு', type: 'case_dative' },
+  { suffix: 'உக்கு', type: 'case_dative' },
+  { suffix: 'ுக்கு', type: 'case_dative' },
+  { suffix: 'ோடு', type: 'case_sociative' },
+  { suffix: 'ஓடு', type: 'case_sociative' },
+  { suffix: 'ால்', type: 'case_instrumental' },
+  { suffix: 'ஆல்', type: 'case_instrumental' },
+  { suffix: 'ான்', type: 'case_instrumental' },
+  { suffix: 'ஆன்', type: 'case_instrumental' },
+  { suffix: 'ில்', type: 'case_locative' },
+  { suffix: 'இல்', type: 'case_locative' },
+  { suffix: 'ின்', type: 'case_genitive' },
+  { suffix: 'இன்', type: 'case_genitive' },
+  { suffix: 'ின', type: 'case_genitive_oblique' },
+  { suffix: 'ுள்', type: 'case_locative' },
+  { suffix: 'உள்', type: 'case_locative' },
+  { suffix: 'கண்', type: 'case_locative' },
+  { suffix: 'ாது', type: 'case_genitive' },
+  { suffix: 'அது', type: 'case_genitive' },
+  { suffix: 'யை', type: 'case_accusative' },
+  { suffix: 'வை', type: 'case_accusative' },
+  { suffix: 'ை', type: 'case_accusative' },
+  { suffix: 'ஐ', type: 'case_accusative' },
+
+  // Nominal, Plural & Derivational Markers
+  { suffix: 'ானது', type: 'nominalizer' },
+  { suffix: 'ஆனது', type: 'nominalizer' },
+  { suffix: 'ங்கள்', type: 'plural' },
+  { suffix: 'ங்கள', type: 'plural_base' },
+  { suffix: 'கள்', type: 'plural' },
+  { suffix: 'கள', type: 'plural_base' },
+  { suffix: 'மார்', type: 'plural' },
+  { suffix: 'மார', type: 'plural_base' },
+  { suffix: 'ாக', type: 'adverbial' },
+  { suffix: 'ஆக', type: 'adverbial' },
+  { suffix: 'ான', type: 'adjectival' },
+  { suffix: 'ஆன', type: 'adjectival' },
+  { suffix: 'மை', type: 'nominalizer' },
+
+  // Clitics & Discourse Markers
+  { suffix: 'தான்', type: 'clitic_emphatic' },
+  { suffix: 'போது', type: 'temporal_marker' },
+  { suffix: 'விட', type: 'comparative_marker' },
+  { suffix: 'ும்', type: 'clitic_inclusive' },
+  { suffix: 'உம்', type: 'clitic_inclusive' },
+  { suffix: 'ே', type: 'clitic_emphatic' },
+  { suffix: 'ஏ', type: 'clitic_emphatic' },
+  { suffix: 'ோ', type: 'clitic_doubt' },
+  { suffix: 'ஓ', type: 'clitic_doubt' }
+];
+
+// Programmatically derive per-rule minimum remaining-root length based on suffix character length tiers:
+// - Tier 1: length === 1 (e.g. ே, ஏ, ோ, ஓ, ை, ஐ) -> minRoot = 4
+// - Tier 2: length === 2 (e.g. யை, வை, ாக, ஆக, ான, ஆன, ின, கள, மை) -> minRoot = 3
+// - Tier 3: length >= 3 (e.g. case markers, tense, PNG suffixes) -> minRoot = 2
+export const SORTED_TAMIL_SUFFIXES = TAMIL_SUFFIX_RULES.map(rule => {
+  const length = rule.suffix.length;
+  const tier = length === 1 ? 1 : (length === 2 ? 2 : 3);
+  const minRoot = length === 1 ? 4 : (length === 2 ? 3 : 2);
+  return {
+    ...rule,
+    length,
+    tier,
+    minRoot
+  };
+}).sort((a, b) => b.suffix.length - a.suffix.length);
+
+/**
+ * Count recognized suffix/morpheme boundaries for a single Tamil word via iterative stripping.
+ * Employs per-rule tiered minimum remaining-root thresholds to prevent false positive stripping on short roots.
+ * @param {string} word - Tamil word string
+ * @returns {number} Count of recognized morpheme boundaries
+ */
+export function countMorphemeBoundaries(word) {
+  if (!word || typeof word !== 'string') return 0;
+
+  // Clean word: remove surrounding punctuation
+  let current = word.trim().replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
+  if (current.length < 2) return 0;
+
+  let boundaries = 0;
+  const maxPasses = 10;
+
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let matched = false;
+    for (const rule of SORTED_TAMIL_SUFFIXES) {
+      if (current.endsWith(rule.suffix)) {
+        const remainingLength = current.length - rule.suffix.length;
+        if (remainingLength >= rule.minRoot) {
+          current = current.slice(0, remainingLength);
+          boundaries++;
+          matched = true;
+          break; // restart search from longest suffix on the shortened stem
+        }
+      }
+    }
+    if (!matched) break;
+  }
+
+  return boundaries;
+}
+
+/**
  * Structural analysis helper for Indic and Latin text
  */
 function analyzeTextStructure(text, languageCode) {
+  const isTamil = languageCode === 'ta' || (languageCode === 'auto' && /[\u0B80-\u0BFF]/.test(text || ''));
+
   if (!text || typeof text !== 'string') {
     return {
       sentenceCount: 0,
@@ -79,7 +278,9 @@ function analyzeTextStructure(text, languageCode) {
       avgWordLength: 0,
       typeTokenRatio: 0,
       avgStructuralDifficulty: 0,
-      conjunctDensity: 0
+      conjunctDensity: 0,
+      avgMorphemeBoundariesPerWord: isTamil ? 0 : null,
+      tamilStructuralDifficulty: isTamil ? 0 : null
     };
   }
 
@@ -124,6 +325,17 @@ function analyzeTextStructure(text, languageCode) {
   const longWordRatio = longWords / wordCount;
   const avgStructuralDifficulty = Math.round(((totalConjuncts / wordCount) * 0.6 + longWordRatio * 0.4) * 100) / 100;
 
+  // Tamil-specific morphological structural difficulty
+  let avgMorphemeBoundariesPerWord = null;
+  let tamilStructuralDifficulty = null;
+
+  if (isTamil) {
+    const totalMorphemes = words.reduce((sum, w) => sum + countMorphemeBoundaries(w), 0);
+    avgMorphemeBoundariesPerWord = Math.round((totalMorphemes / wordCount) * 10) / 10;
+    // Combined score: equal weighting (0.5) of morpheme-chain complexity and conjunct density
+    tamilStructuralDifficulty = Math.round(((avgMorphemeBoundariesPerWord * 0.5) + ((conjunctDensity / 100) * 0.5)) * 100) / 100;
+  }
+
   return {
     sentenceCount,
     wordCount,
@@ -131,7 +343,9 @@ function analyzeTextStructure(text, languageCode) {
     avgWordLength,
     typeTokenRatio,
     avgStructuralDifficulty,
-    conjunctDensity
+    conjunctDensity,
+    avgMorphemeBoundariesPerWord,
+    tamilStructuralDifficulty
   };
 }
 

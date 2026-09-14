@@ -3,7 +3,7 @@ import { detectLanguage } from '../public/js/languageDetector.js';
 import { splitIntoParagraphs } from '../public/js/paragraphSplitter.js';
 import { AggressivenessModel } from '../public/js/aggressivenessModel.js';
 import { SignalTracker } from '../public/js/signalTracker.js';
-import { computeReadabilityDelta } from '../public/js/readabilityMetrics.js';
+import { computeReadabilityDelta, countMorphemeBoundaries } from '../public/js/readabilityMetrics.js';
 
 console.log('🧪 Starting Automated Module Test Suite (v2 + Addendum)...\n');
 
@@ -151,7 +151,57 @@ const tamilDelta = computeReadabilityDelta({
 });
 assert.ok(tamilDelta.conjunctDensity.before > 0, 'Indic text should have measurable conjunct density');
 
-console.log('✅ Automated Readability Metrics tests passed!\n');
+// Tamil Morpheme Boundary & Morphological-Structural Difficulty Tests
+// 1. Chained suffixes (case-marked + further inflected/chained form) -> count > 1
+const multiSuffixWord = 'மரத்தினால்'; // மரம் + இன் + ஆல்
+assert.ok(countMorphemeBoundaries(multiSuffixWord) > 1, `Chained suffix word ${multiSuffixWord} should have > 1 morpheme boundaries`);
+const multiSuffixWord2 = 'அவர்களுடைய'; // அவர் + கள் + உடைய
+assert.ok(countMorphemeBoundaries(multiSuffixWord2) > 1, `Chained suffix word ${multiSuffixWord2} should have > 1 morpheme boundaries`);
+
+// 2. Bare Tamil root with no suffix -> count === 0
+const bareRoot1 = 'மரம்';
+const bareRoot2 = 'தமிழ்';
+const bareRoot3 = 'நூல்';
+assert.strictEqual(countMorphemeBoundaries(bareRoot1), 0, `Bare root ${bareRoot1} should have 0 morpheme boundaries`);
+assert.strictEqual(countMorphemeBoundaries(bareRoot2), 0, `Bare root ${bareRoot2} should have 0 morpheme boundaries`);
+assert.strictEqual(countMorphemeBoundaries(bareRoot3), 0, `Bare root ${bareRoot3} should have 0 morpheme boundaries`);
+
+// 3. False-Positive Resistance: real dictionary root words ending in short vowel/clitic characters (e.g. -ை, -மை) inherently
+const fpRoot1 = 'மலை'; // 'mountain' (length 3, ends in ை; remaining root 'மல' < 4 chars required by Tier 1)
+const fpRoot2 = 'தலை'; // 'head' (length 3, ends in ை; remaining root 'தல' < 4 chars required by Tier 1)
+const fpRoot3 = 'விலை'; // 'price' (length 4, ends in ை; remaining root 'வில' < 4 chars required by Tier 1)
+const fpRoot4 = 'ஆமை'; // 'turtle' (length 3, ends in மை; remaining root 'ஆ' < 3 chars required by Tier 2)
+assert.strictEqual(countMorphemeBoundaries(fpRoot1), 0, `Dictionary root word ${fpRoot1} ending in ை should return 0 morphemes`);
+assert.strictEqual(countMorphemeBoundaries(fpRoot2), 0, `Dictionary root word ${fpRoot2} ending in ை should return 0 morphemes`);
+assert.strictEqual(countMorphemeBoundaries(fpRoot3), 0, `Dictionary root word ${fpRoot3} ending in ை should return 0 morphemes`);
+assert.strictEqual(countMorphemeBoundaries(fpRoot4), 0, `Dictionary root word ${fpRoot4} ending in மை should return 0 morphemes`);
+
+// 4. computeReadabilityDelta() on Tamil pair should populate tamilStructuralDifficulty as a number (not null)
+assert.ok(tamilDelta.tamilStructuralDifficulty !== null, 'Tamil delta should populate tamilStructuralDifficulty');
+assert.strictEqual(typeof tamilDelta.tamilStructuralDifficulty.before, 'number', 'tamilStructuralDifficulty.before must be a number');
+assert.strictEqual(typeof tamilDelta.tamilStructuralDifficulty.after, 'number', 'tamilStructuralDifficulty.after must be a number');
+assert.strictEqual(typeof tamilDelta.tamilStructuralDifficulty.delta, 'number', 'tamilStructuralDifficulty.delta must be a number');
+assert.ok(tamilDelta.avgMorphemeBoundariesPerWord !== null, 'Tamil delta should populate avgMorphemeBoundariesPerWord');
+assert.strictEqual(typeof tamilDelta.avgMorphemeBoundariesPerWord.before, 'number', 'avgMorphemeBoundariesPerWord.before must be a number');
+
+// 4. computeReadabilityDelta() on English or Hindi pair should return tamilStructuralDifficulty: null
+const hindiDelta = computeReadabilityDelta({
+  originalText: 'कृत्रिम बुद्धिमत्ता के विकास ने आधुनिक समाज में परिवर्तन किया है।',
+  simplifiedText: 'एआई तकनीक ने नए समाज में बदलाव लाया है।',
+  languageCode: 'hi'
+});
+assert.strictEqual(hindiDelta.tamilStructuralDifficulty, null, 'Hindi delta must return tamilStructuralDifficulty as null');
+assert.strictEqual(hindiDelta.avgMorphemeBoundariesPerWord, null, 'Hindi delta must return avgMorphemeBoundariesPerWord as null');
+
+const englishDelta = computeReadabilityDelta({
+  originalText: 'Artificial intelligence enables computers to assist readers efficiently.',
+  simplifiedText: 'AI helps people read easily.',
+  languageCode: 'en'
+});
+assert.strictEqual(englishDelta.tamilStructuralDifficulty, null, 'English delta must return tamilStructuralDifficulty as null');
+assert.strictEqual(englishDelta.avgMorphemeBoundariesPerWord, null, 'English delta must return avgMorphemeBoundariesPerWord as null');
+
+console.log('✅ Automated Readability Metrics & Tamil Morphological Difficulty tests passed!\n');
 
 // -------------------------------------------------------------
 // Test 6: Distinct Targeted Word Replacement Logging
